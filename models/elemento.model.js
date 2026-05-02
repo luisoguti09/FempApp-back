@@ -1,27 +1,44 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Evento = require('./evento.model');
-const Patinador = require('./patinador.model');
 
 const Elemento = sequelize.define('Elemento', {
-    nombre: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    categoria: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    valor: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
-  });
-  
-// Relación muchos a muchos con Eventos
-Patinador.belongsToMany(Evento, { through: 'PatinadorEvento' });
-Evento.belongsToMany(Patinador, { through: 'PatinadorEvento' });
-
+  nombre: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  codigo: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  disciplina: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  tipo: {
+    type: DataTypes.ENUM('salto', 'trompo', 'secuencia', 'figura', 'danza', 'otro'),
+    allowNull: false,
+    defaultValue: 'otro'
+  },
+  categoria: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  valorBase: {
+    type: DataTypes.DECIMAL(6, 2),
+    allowNull: true
+  },
+  descripcion: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  activo: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  }
+}, {
+  tableName: 'elementos',
+  timestamps: true
+});
 
 module.exports = Elemento;
-

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Evento = require('../models/evento.model');
-const Componente = require('../models/componente.models');
+const Componente = require('../models/componente.model');
 const {authMiddleware} = require('../middleware/auth.middleware');
 
 // Obtener todos los patinadores (authMiddleware)

@@ -2,9 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Patinador = require('../models/patinador.model');
 const Evento = require('../models/evento.model');
-const {authMiddleware} = require('../middleware/auth.middleware');
+const upload = require('../middleware/upload.middleware');
+const path = require('path');
+const fs = require('fs');
 
-// Obtener todos los patinadores (authMiddleware)
+// ======================
+// CRUD Básico Patinador
+// ======================
+
+// Obtener todos los patinadores
 router.get('/', async (req, res) => {
   try {
     const patinadores = await Patinador.findAll();
@@ -14,55 +20,149 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Crear un nuevo patinador
+// Obtener un patinador por ID
+router.get('/:id', async (req, res) => {
+  try {
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador) {
+      return res.status(404).json({ error: 'Patinador no encontrado' });
+    }
+    res.json(patinador);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener el patinador' });
+  }
+});
+
+// Crear nuevo patinador
 router.post('/', async (req, res) => {
   try {
-    const { nombre, edad, nivel } = req.body;
-    const nuevoPatinador = await Patinador.create({ nombre, edad, nivel });
-    res.status(201).json(nuevoPatinador);
+    const nuevo = await Patinador.create(req.body);
+    res.status(201).json(nuevo);
   } catch (error) {
     res.status(500).json({ error: 'Error al crear el patinador' });
   }
 });
 
-
-
-// eventos
-// Inscribir un patinador en un evento
-router.post('/:patinadorId/eventos/:eventoId', async (req, res) => {
+// Actualizar patinador
+router.put('/:id', async (req, res) => {
   try {
-    const { patinadorId, eventoId } = req.params;
-    const patinador = await Patinador.findByPk(patinadorId);
-    const evento = await Evento.findByPk(eventoId);
-
-    if (!patinador || !evento) {
-      return res.status(404).json({ error: 'Patinador o evento no encontrado' });
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador) {
+      return res.status(404).json({ error: 'Patinador no encontrado' });
     }
 
-    await patinador.AddEvento(evento);
-    res.status(200).json({ message: 'Patinador inscrito en el evento exitosamente' });
+    await patinador.update(req.body);
+    res.json({ message: 'Patinador actualizado', patinador });
   } catch (error) {
-    res.status(500).json({ error: 'Error al inscribir el patinador en el evento' });
+    res.status(500).json({ error: 'Error al actualizar el patinador' });
   }
-  });
+});
 
-// Obtener todos los eventos a los que un patinador está inscrito
-router.get('/:patinadorId/eventos', async (req, res) => {
-    try {
-      const { patinadorId } = req.params;
-      const patinador = await Patinador.findByPk(patinadorId, {
-        include: Evento
-      });
-  
-      if (!patinador) {
-        return res.status(404).json({ error: 'Patinador no encontrado' });
-      }
-  
-      res.json(patinador.Eventos);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los eventos del patinador' });
+// Eliminar patinador
+router.delete('/:id', async (req, res) => {
+  try {
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador) {
+      return res.status(404).json({ error: 'Patinador no encontrado' });
     }
-  });
-  
+
+    await patinador.destroy();
+    res.json({ message: 'Patinador eliminado' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar el patinador' });
+  }
+});
+
+
+// ==============================
+// Gestión de foto de perfil
+// ==============================
+
+// Subir foto
+router.post('/:id/fotoPerfil', upload.single('fotoPerfil'), async (req, res) => {
+  try {
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador) {
+      return res.status(404).json({ error: 'Patinador no encontrado' });
+    }
+
+    // Eliminar la anterior si existe
+    if (patinador.fotoPerfil) {
+      const previousPath = path.join(__dirname, '..', patinador.fotoPerfil);
+      if (fs.existsSync(previousPath)) {
+        fs.unlinkSync(previousPath);
+      }
+    }
+
+    // Guardar nueva ruta
+    patinador.fotoPerfil = path.join('uploads', req.file.filename);
+    await patinador.save();
+
+    res.json({ message: 'Foto de perfil actualizada', path: patinador.fotoPerfil });
+  } catch (error) {
+    console.error('Error al subir la foto:', error);
+    res.status(500).json({ error: 'Error al subir la foto' });
+  }
+});
+
+// Obtener foto de perfil
+router.get('/:id/fotoPerfil', async (req, res) => {
+  try {
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador || !patinador.fotoPerfil) {
+      return res.status(404).json({ error: 'Foto no encontrada' });
+    }
+
+    res.sendFile(path.resolve(patinador.fotoPerfil));
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener la foto' });
+  }
+});
+
+// Eliminar foto de perfil
+router.delete('/:id/fotoPerfil', async (req, res) => {
+  try {
+    const patinador = await Patinador.findByPk(req.params.id);
+    if (!patinador || !patinador.fotoPerfil) {
+      return res.status(404).json({ error: 'Foto no encontrada' });
+    }
+
+    const filePath = path.resolve(patinador.fotoPerfil);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    patinador.fotoPerfil = null;
+    await patinador.save();
+
+    res.json({ message: 'Foto eliminada' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar la foto' });
+  }
+});
+
+// Obtener eventos en los que está inscripto un patinador
+router.get('/:dni/eventos', async (req, res) => {
+  try {
+    console.log('DNI del patinador:', req.params.dni);
+    const patinador = await Patinador.findAll({where:{dni:req.params.dni}}, {
+      include: {
+        model: Evento,
+        through: { attributes: [] }
+      }
+    }); 
+
+    if (!patinador) {
+      return res.status(404).json({ error: 'Patinador no encontrado' });
+    }
+    console.log(patinador,'patinador');
+    console.log(patinador.Eventos,'Eventos');
+    res.json(patinador.Eventos);
+    
+  } catch (error) {
+    console.error('Error al obtener eventos del patinador:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 module.exports = router;
