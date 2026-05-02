@@ -10,6 +10,6 @@ const sequelize = new Sequelize('railway', 'root', 'CAtFaezrXbDgIiaknlKQZhCYaoMh
   dialect: 'mysql',
   logging: false, // Desactiva los logs de Sequelize
 });
-
+ 
 module.exports = sequelize;
 //mysql://root:CAtFaezrXbDgIiaknlKQZhCYaoMhKHjK@tramway.proxy.rlwy.net:16455/railway
