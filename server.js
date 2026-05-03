@@ -24,11 +24,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
-    'http://localhost',
-    'http://localhost:4200',
-    'capacitor://localhost',
-    'http://localhost:3000',
-    'http://localhost:3000',
+    'https://fempapp-production.up.railway.app',
+    'https://fempapp-production.up.railway.app:8080',
   ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
