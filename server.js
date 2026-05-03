@@ -64,11 +64,12 @@ app.get('/', (req, res) => {
 });
 
 // Iniciar servidor y sincronizar base de datos
-db.sequelize.sync().then(() => {
-  console.log('✅ Base de datos sincronizada correctamente.');
-  app.listen(port, "0.0.0.0", () => {
+ app.listen(port, "0.0.0.0", () => {
     console.log(`🚀 Servidor escuchando en http://localhost:${port}`);
   });
+db.sequelize.sync().then(() => {
+  console.log('✅ Base de datos sincronizada correctamente.');
+ 
 }).catch(err => {
   console.error('❌ Error al sincronizar base de datos:', err);
 });
