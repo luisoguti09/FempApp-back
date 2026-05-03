@@ -40,6 +40,14 @@ const Usuario = sequelize.define('Usuario', {
     values: ['administrador', 'tecnico', 'deportista'],
     allowNull: false
   },
+  rolId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Roles',
+      key: 'id'
+    }
+  },
   fotoPerfil: {
     type: DataTypes.STRING,
     allowNull: true
