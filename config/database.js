@@ -4,11 +4,16 @@ const { Sequelize } = require('sequelize');
   host: 'localhost',
   dialect: 'mysql'
 });*/
-const sequelize = new Sequelize('railway', 'root', 'CAtFaezrXbDgIiaknlKQZhCYaoMhKHjK', {
-  host: 'tramway.proxy.rlwy.net',
-  port: 16455,
+
+const conectionString = "mysql://root:CAtFaezrXbDgIiaknlKQZhCYaoMhKHjK@tramway.proxy.rlwy.net:16455/railway";
+const sequelize = new Sequelize(conectionString, {
   dialect: 'mysql',
   logging: false, // Desactiva los logs de Sequelize
+  dialectOptions: process.env.DATABASE_URL || {
+    ssl: {
+      rejectUnauthorized: false // Permite conexiones SSL sin verificar el certificado
+    }
+  }
 });
  
 module.exports = sequelize;
